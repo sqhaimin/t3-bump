@@ -267,11 +267,44 @@
                 if (elapsed < celebrationDuration && jumpCount < maxJumps * 2) { 
                     requestAnimationFrame(celebrationLoop);
                 } else {
-                    if (snapshotData) { chartCtx.putImageData(snapshotData, snapshotX, snapshotY); }
-                    drawBumpImage(chartCtx, finalX, finalY);
+                    // Instead of just drawing the final image, we reset and loop.
+                    // First, clear the area where the celebration was happening to avoid artifacts.
+                    const chartArea = priceChart.chartArea; // Ensure chartArea is defined in this scope
+                    if (chartArea) { // Proceed only if chartArea is available
+                        if (snapshotData) {
+                            chartCtx.putImageData(snapshotData, snapshotX, snapshotY); 
+                        } else {
+                            // Fallback clear if snapshot was not available
+                            const maskSizeForClear = Math.round(chartArea.height * 0.15);
+                            const radiusForClear = maskSizeForClear / 2;
+                            const jumpH = 35; // Match current jumpHeight
+                            chartCtx.clearRect(
+                                finalX - radiusForClear - 5, 
+                                finalY - radiusForClear - jumpH - 5, 
+                                (radiusForClear + 5) * 2, 
+                                (radiusForClear + 5) * 2 + jumpH
+                            );
+                        }
+                    }
+                    resetAndLoopAnimation(); // Call the new loop function
                 }
             }
             requestAnimationFrame(celebrationLoop);
+        }
+
+        function resetAndLoopAnimation() {
+            // console.log("Resetting and looping animation...");
+            currentSegmentIndex = 0;
+            animationState.startTime = null;
+            priceChart.data.datasets[0].data = [];
+            priceChart.update('none'); // Use 'none' for no animation during reset
+
+            if (historicalData.length > 0) {
+                updateTextDisplay(historicalData[0], true);
+            }
+            // No need to explicitly restart audio, as it's set to loop in HTML.
+            // If precise re-syncing with audio fade-in is needed each loop, that could be added here.
+            requestAnimationFrame(animateLine);
         }
 
         let currentSegmentIndex = 0;
