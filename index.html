@@ -97,7 +97,6 @@
         <div class="price-container">
             <h1><img src="https://media.tenor.com/hKz2ykSpp4gAAAAj/party-time-dinosaur.gif" alt="Party Dinosaur" style="height: 1em; vertical-align: -0.1em;"> T3 Bump — 5/13/25 <img src="https://media.tenor.com/hKz2ykSpp4gAAAAj/party-time-dinosaur.gif" alt="Party Dinosaur" style="height: 1em; vertical-align: -0.1em;"></h1>
             <div class="price" id="price">---.--</div>
-            <div class="last-update" id="lastUpdate">Last updated: --:--:-- AM EDT</div>
             <div class="change" id="change">+-.-- (+-.--%)</div>
         </div>
         <div class="chart-container">
@@ -126,11 +125,7 @@
         // --- Function to set initial display values / update text ---
         function updateTextDisplay(dataPoint, isInitial = false) {
             document.getElementById('price').textContent = `$${dataPoint.price.toFixed(2)}`;
-            if (isInitial) {
-                 document.getElementById('lastUpdate').textContent = `As of ${dataPoint.time.toLocaleTimeString('en-US')}`;
-            } else {
-                 document.getElementById('lastUpdate').textContent = `Last updated: ${new Date(dataPoint.time).toLocaleTimeString('en-US')}`;
-            }
+            // Removed lastUpdate logic
             const change = dataPoint.price - openPrice;
             const changePercent = (change / openPrice) * 100;
             const sign = change >= 0 ? '+' : '';
@@ -139,7 +134,9 @@
         }
         
         if (historicalData.length > 0) {
-            updateTextDisplay(historicalData[0], true); // Set initial display
+            // The initial call to updateTextDisplay will now only set price and change,
+            // as lastUpdate logic has been removed from the function itself.
+            updateTextDisplay(historicalData[0], true); 
         }
 
         const ctx = document.getElementById('priceChart').getContext('2d');
