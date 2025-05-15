@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>T3 Bump — 5/13/25 🎉🥳🎊</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #1a1a1a; /* Dark background for body */
+            color: #e0e0e0; /* Light text color for body */
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #2a2a2a; /* Darker container background */
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5); /* Adjusted shadow for dark mode */
+            padding: 2rem;
+        }
+        .price-container {
+            text-align: center;
+            margin-bottom: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem; /* Reduced from 1rem to 0.5rem for tighter spacing */
+        }
+        .price {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #ffffff; /* Bright white for price */
+            margin: 0; /* Remove margins since we're using flex gap */
+        }
+        .change {
+            font-size: 1.5rem;
+            margin: 0; /* Remove margins since we're using flex gap */
+        }
+        .positive {
+            color: #4caf50; /* Slightly adjusted green */
+        }
+        .negative {
+            color: #f44336; /* Slightly adjusted red */
+        }
+        .last-update {
+            color: #aaaaaa; /* Softer light gray for last update */
+            font-size: 0.9rem;
+            margin: 0; /* Remove margins since we're using flex gap */
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            margin-top: 2rem;
+        }
+        #mainPlayButton {
+            position: relative; /* Needed for the pseudo-element positioning */
+            overflow: hidden;   /* Ensures the shine doesn't go outside the button */
+        }
+
+        #mainPlayButton::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%; /* Start off-screen to the left */
+            width: 75%;  /* Width of the shine element */
+            height: 100%;
+            background: linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.5) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: skewX(-25deg); /* Angle the shine */
+            animation: shine 1.0s infinite linear; /* Shine 0.75s, Pause 0.25s */
+        }
+
+        @keyframes shine {
+            0% {
+                left: -100%;
+            }
+            75% { /* Shine finishes crossing */
+                left: 125%;
+            }
+            100% { /* Brief pause before reset */
+                left: 125%; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <audio id="backgroundMusic" preload="auto" loop autoplay muted>
+            <source src="axel-f.mp3" type="audio/mpeg">
+        </audio>
+        <div class="price-container">
+            <h1>T3 Bump — 5/13/25 🎉🥳🎊</h1>
+            <div class="price" id="price">---.--</div>
+            <div class="last-update" id="lastUpdate">Last updated: --:--:-- AM EDT</div>
+            <div class="change" id="change">+-.-- (+-.--%)</div>
+        </div>
+        <div class="chart-container">
+            <canvas id="priceChart"></canvas>
+            <div id="playOverlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(42, 42, 42, 0.85); display: flex; justify-content: center; align-items: center; z-index: 10; border-radius: inherit; cursor: pointer;">
+                <button id="mainPlayButton" style="font-size: 1.6em; width: 250px; height: 250px; padding: 0; cursor: pointer; border-radius: 50%; border: none; background-color: #4caf50; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.4); transition: background-color 0.2s ease; display: flex; justify-content: center; align-items: center; text-align: center; line-height: 1.2; transform: translateY(-20px);">
+                    <!-- Text will be set by JavaScript -->
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Use real historical data points
+        function generateHistoricalData() {
+            const rawData = [{"time": 1747143000000, "price": 55.19}, {"time": 1747143900000, "price": 55.149}, {"time": 1747144800000, "price": 55.61}, {"time": 1747145700000, "price": 55.407}, {"time": 1747146600000, "price": 55.465}, {"time": 1747147500000, "price": 55.35}, {"time": 1747148400000, "price": 55.385}, {"time": 1747149300000, "price": 55.7}, {"time": 1747150200000, "price": 55.88}, {"time": 1747151100000, "price": 55.71}, {"time": 1747152000000, "price": 55.68}, {"time": 1747152900000, "price": 55.705}, {"time": 1747153800000, "price": 57.5}, {"time": 1747154700000, "price": 57.42}, {"time": 1747155600000, "price": 57.44}, {"time": 1747156500000, "price": 57.62}, {"time": 1747157400000, "price": 57.6316}, {"time": 1747158300000, "price": 57.68}, {"time": 1747159200000, "price": 57.64}, {"time": 1747160100000, "price": 57.78}, {"time": 1747161000000, "price": 57.83}, {"time": 1747161900000, "price": 58.4092}, {"time": 1747162800000, "price": 58.23}, {"time": 1747163700000, "price": 58.325}, {"time": 1747164600000, "price": 58.56}, {"time": 1747165500000, "price": 58.19}, {"time": 1747166400000, "price": 58.17}];
+            return rawData.map(d => ({
+                time: new Date(d.time),
+                price: d.price
+            }));
+        }
+
+        const historicalData = generateHistoricalData();
+        const openPrice = historicalData[0].price;
+
+        // --- Function to set initial display values / update text ---
+        function updateTextDisplay(dataPoint, isInitial = false) {
+            document.getElementById('price').textContent = `$${dataPoint.price.toFixed(2)}`;
+            if (isInitial) {
+                 document.getElementById('lastUpdate').textContent = `As of ${dataPoint.time.toLocaleTimeString('en-US')}`;
+            } else {
+                 document.getElementById('lastUpdate').textContent = `Last updated: ${new Date(dataPoint.time).toLocaleTimeString('en-US')}`;
+            }
+            const change = dataPoint.price - openPrice;
+            const changePercent = (change / openPrice) * 100;
+            const sign = change >= 0 ? '+' : '';
+            document.getElementById('change').textContent = `${sign}${change.toFixed(2)} (${sign}${changePercent.toFixed(2)}%)`;
+            document.getElementById('change').className = 'change ' + (change >= 0 ? 'positive' : 'negative');
+        }
+        
+        if (historicalData.length > 0) {
+            updateTextDisplay(historicalData[0], true); // Set initial display
+        }
+
+        const ctx = document.getElementById('priceChart').getContext('2d');
+        const priceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: historicalData.map(d => d.time.getTime()),
+                datasets: [{
+                    label: '', data: [], borderColor: '#42a5f5',
+                    borderWidth: 3, tension: 0.4, fill: true, pointRadius: 0
+                }]
+            },
+            options: { // CORRECTED OPTIONS BLOCK STARTS HERE
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false 
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'linear', 
+                        min: historicalData[0].time.getTime(), 
+                        max: historicalData[historicalData.length - 1].time.getTime(), 
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: {
+                            maxTicksLimit: 8,
+                            callback: function(v) {
+                                return new Date(v).toLocaleTimeString('en-US', {
+                                    hour: '2-digit', minute: '2-digit', hour12: true
+                                });
+                            }
+                        }
+                    },
+                    y: {
+                        min: 54,
+                        max: 59,
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    }
+                },
+                animation: false
+            } // CORRECTED OPTIONS BLOCK ENDS HERE
+        });
+
+        const bumpImage = new Image();
+        bumpImage.src = 't3_bump_icon.png'; 
+        const patternImage = new Image();
+
+        function drawBumpImage(chartCtx, xPx, yPx) {
+            const chartArea = priceChart.chartArea;
+            if (!chartArea || !bumpImage.complete || bumpImage.naturalHeight === 0) return;
+            const maskSize = Math.round(chartArea.height * 0.15); const radius = maskSize / 2;
+            chartCtx.save(); chartCtx.beginPath(); chartCtx.arc(xPx, yPx, radius, 0, Math.PI * 2); chartCtx.closePath();
+            chartCtx.fillStyle = '#b9c6ca'; chartCtx.fill(); chartCtx.clip();
+            const imageSize = Math.round(maskSize * 0.8);
+            const offsetX = imageSize * 0.10; const offsetY = imageSize * 0.10;
+            chartCtx.drawImage(bumpImage, xPx - imageSize / 2 + offsetX, yPx - imageSize / 2 + offsetY, imageSize, imageSize);
+            chartCtx.beginPath(); chartCtx.arc(xPx, yPx, radius, 0, Math.PI * 2);
+            chartCtx.strokeStyle = '#22c55e'; chartCtx.lineWidth = 5; chartCtx.stroke();
+            chartCtx.restore();
+        }
+
+        function celebrateBumpImage(chartCtx, finalX, finalY, snapshotData, snapshotX, snapshotY) {
+            // console.log("Starting T3 celebration at", finalX, finalY);
+            let angle = 0;
+            let jumpOffset = 0;
+            let jumpDirection = 1;
+            let jumpCount = 0;
+            const maxJumps = 4; 
+            const jumpHeight = 50; 
+            const rotationSpeed = 0.75; 
+            const celebrationDuration = 10000; 
+            let startTime = null;
+
+            function celebrationLoop(timestamp) {
+                const chartArea = priceChart.chartArea;
+                if (!chartArea) { /* console.error("CelebrationLoop: chartArea is not available"); */ return; }
+
+                if (snapshotData) {
+                    chartCtx.putImageData(snapshotData, snapshotX, snapshotY);
+                    try { chartCtx.getImageData(0, 0, 1, 1); } catch (e) { /* ignore */ }
+                } else {
+                    // Fallback if snapshot failed
+                    const maskSizeForClear = Math.round(chartArea.height * 0.15);
+                    const radiusForClear = maskSizeForClear / 2;
+                    const fallbackClearPadding = 5;
+                    const currentDrawYForClear = finalY - jumpOffset;
+                    chartCtx.clearRect(
+                        finalX - radiusForClear - fallbackClearPadding, 
+                        currentDrawYForClear - radiusForClear - fallbackClearPadding, 
+                        maskSizeForClear + (fallbackClearPadding * 2), 
+                        maskSizeForClear + (fallbackClearPadding * 2)
+                    );
+                }
+
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+
+                angle += rotationSpeed;
+                if (angle >= 360) angle -= 360;
+
+                jumpOffset += jumpHeight / 60 * jumpDirection; // Slower jump
+                if (jumpOffset >= jumpHeight) { jumpDirection = -1; jumpCount++; }
+                if (jumpOffset <= 0 && jumpDirection === -1) { jumpDirection = 1; jumpCount++; }
+                
+                const currentY = finalY - jumpOffset;
+
+                if (!bumpImage.complete || bumpImage.naturalHeight === 0) return;
+
+                const maskSize = Math.round(chartArea.height * 0.15); 
+                const radius = maskSize / 2;
+                const imageSize = Math.round(maskSize * 0.8);
+                const offsetX = imageSize * 0.10; 
+                const offsetY = imageSize * 0.10;
+
+                chartCtx.save();
+                chartCtx.translate(finalX, currentY);
+                chartCtx.rotate(angle * Math.PI / 180);
+                chartCtx.beginPath(); chartCtx.arc(0, 0, radius, 0, Math.PI * 2); chartCtx.closePath();
+                chartCtx.fillStyle = '#b9c6ca'; chartCtx.fill();
+                chartCtx.clip();
+                chartCtx.drawImage(bumpImage, -imageSize / 2 + offsetX, -imageSize / 2 + offsetY, imageSize, imageSize);
+                chartCtx.beginPath(); chartCtx.arc(0, 0, radius, 0, Math.PI * 2);
+                chartCtx.strokeStyle = '#22c55e'; chartCtx.lineWidth = 5; chartCtx.stroke();
+                chartCtx.restore(); 
+
+                if (elapsed < celebrationDuration && jumpCount < maxJumps * 2) { 
+                    requestAnimationFrame(celebrationLoop);
+                } else {
+                    if (snapshotData) { chartCtx.putImageData(snapshotData, snapshotX, snapshotY); }
+                    drawBumpImage(chartCtx, finalX, finalY);
+                }
+            }
+            requestAnimationFrame(celebrationLoop);
+        }
+
+        let currentSegmentIndex = 0;
+        const segmentDuration = 500; 
+        let animationState = { startTime: null }; // Renamed from animationFrame to avoid conflict
+
+        function animateLine(timestamp) {
+            if (!animationState.startTime) animationState.startTime = timestamp;
+            const elapsed = timestamp - animationState.startTime;
+            const progress = Math.min(elapsed / segmentDuration, 1);
+            
+            const startPoint = historicalData[currentSegmentIndex];
+            const endPoint = historicalData[currentSegmentIndex + 1];
+            
+            if (!startPoint || !endPoint) { // Safety check
+                // console.error("Animation points missing"); 
+                return;
+            }
+
+            const interpolatedTime = startPoint.time.getTime() + (endPoint.time.getTime() - startPoint.time.getTime()) * progress;
+            const interpolatedPrice = startPoint.price + (endPoint.price - startPoint.price) * progress;
+            
+            const currentFrameData = [];
+            for (let i = 0; i <= currentSegmentIndex; i++) {
+                currentFrameData.push({ x: historicalData[i].time.getTime(), y: historicalData[i].price });
+            }
+            currentFrameData.push({ x: interpolatedTime, y: interpolatedPrice });
+            
+            priceChart.data.datasets[0].data = currentFrameData; 
+            priceChart.update('none'); 
+            
+            updateTextDisplay({ time: interpolatedTime, price: interpolatedPrice });
+            
+            const metaTip = priceChart.getDatasetMeta(0);
+            const lastElementTip = metaTip.data[metaTip.data.length - 1];
+            if (lastElementTip) drawBumpImage(priceChart.ctx, lastElementTip.x, lastElementTip.y);
+
+            if (progress < 1) {
+                requestAnimationFrame(animateLine);
+            } else { 
+                currentSegmentIndex++; 
+                animationState.startTime = null; 
+                if (currentSegmentIndex < historicalData.length - 1) {
+                    requestAnimationFrame(animateLine);
+                } else {
+                    // Animation complete, trigger celebration
+                    const meta = priceChart.getDatasetMeta(0);
+                    if (!meta || !meta.data || meta.data.length === 0) { return; }
+                    const lastElement = meta.data[meta.data.length - 1];
+                    if (lastElement && typeof lastElement.x === 'number' && typeof lastElement.y === 'number') {
+                       const chartArea = priceChart.chartArea;
+                       const maskSize = Math.round(chartArea.height * 0.15);
+                       const radius = maskSize / 2;
+                       const clearPadding = 20; 
+                       const jumpH = 50; // Should match celebrateBumpImage jumpHeight
+
+                       const snapshotX = Math.floor(lastElement.x - radius - clearPadding);
+                       const snapshotY = Math.floor(lastElement.y - radius - jumpH - clearPadding);
+                       const snapshotWidth = Math.ceil((radius + clearPadding) * 2);
+                       const snapshotHeight = Math.ceil((radius + clearPadding) * 2 + jumpH);
+
+                       try {
+                           const snapshotData = priceChart.ctx.getImageData(snapshotX, snapshotY, snapshotWidth, snapshotHeight);
+                           celebrateBumpImage(priceChart.ctx, lastElement.x, lastElement.y, snapshotData, snapshotX, snapshotY);
+                       } catch (e) {
+                           // console.error("Error capturing snapshot for celebration:", e);
+                           celebrateBumpImage(priceChart.ctx, lastElement.x, lastElement.y, null, 0, 0);
+                       }
+                    }
+                }
+            }
+        }
+        
+        const playOverlay = document.getElementById('playOverlay');
+        const mainPlayButton = document.getElementById('mainPlayButton');
+        let essentialResourcesLoaded = false;
+        const audioElement = document.getElementById('backgroundMusic');
+
+        function allVisualResourcesReady() {
+            essentialResourcesLoaded = true; 
+            mainPlayButton.innerHTML = "🚀 PRESS ME 🚀";
+            mainPlayButton.disabled = false;
+        }
+
+        const FADE_DURATION = 1500;
+        const FADE_INTERVAL = 50;
+        let fadeIntervalId = null;
+        function startAudioFadeIn() {
+            if (fadeIntervalId) clearInterval(fadeIntervalId); 
+            let currentVolume = audioElement.muted ? 0 : audioElement.volume; 
+            if (audioElement.muted) audioElement.volume = 0; 
+            const targetVolume = 1.0; 
+            const volumeStep = targetVolume / (FADE_DURATION / FADE_INTERVAL);
+            fadeIntervalId = setInterval(() => {
+                currentVolume += volumeStep;
+                if (currentVolume >= targetVolume) {
+                    audioElement.volume = targetVolume; clearInterval(fadeIntervalId);
+                } else { audioElement.volume = currentVolume; }
+            }, FADE_INTERVAL);
+        }
+
+        window.onload = () => {
+            let bumpImageLoadedOrFailed = false;
+            let patternImageLoadedOrFailed = false;
+
+            mainPlayButton.innerHTML = "⏳";
+            mainPlayButton.disabled = true;
+
+            function checkAllImagesProcessed() {
+                if (bumpImageLoadedOrFailed && patternImageLoadedOrFailed) {
+                    allVisualResourcesReady();
+                }
+            }
+
+            if (bumpImage.complete && bumpImage.naturalHeight !== 0) {
+                bumpImageLoadedOrFailed = true; checkAllImagesProcessed();
+            } else {
+                bumpImage.onload = () => { bumpImageLoadedOrFailed = true; checkAllImagesProcessed(); };
+                bumpImage.onerror = () => { bumpImageLoadedOrFailed = true; checkAllImagesProcessed(); /* console.error("Bump image failed"); */ };
+            }
+            
+            patternImage.onload = () => {
+                const offScreenCanvas = document.createElement('canvas'); const offScreenCtx = offScreenCanvas.getContext('2d');
+                const scaleFactor = 0.65; const scaledWidth = patternImage.width * scaleFactor; const scaledHeight = patternImage.height * scaleFactor;
+                const rotationPadding = Math.max(scaledWidth, scaledHeight) * 0.3;
+                offScreenCanvas.width = scaledWidth + rotationPadding * 2; offScreenCanvas.height = scaledHeight + rotationPadding * 2;
+                offScreenCtx.translate(offScreenCanvas.width / 2, offScreenCanvas.height / 2); offScreenCtx.rotate(-10 * Math.PI / 180);
+                const rightShift = scaledWidth * -0.2; const shiftY = -scaledHeight * 0.55; 
+                offScreenCtx.drawImage(patternImage, rightShift - scaledWidth/2, shiftY - scaledHeight/2, scaledWidth, scaledHeight);
+                const patternObject = priceChart.ctx.createPattern(offScreenCanvas, 'repeat');
+                priceChart.data.datasets[0].backgroundColor = patternObject; 
+                priceChart.data.datasets[0].fill = true; // Enable fill now that pattern is ready
+                priceChart.update('none'); // Update without animation
+                patternImageLoadedOrFailed = true; checkAllImagesProcessed();
+            };
+            patternImage.onerror = (e) => {
+                // console.error("Pattern image failed to load.");
+                priceChart.data.datasets[0].backgroundColor = 'rgba(66, 165, 245, 0.2)'; // Fallback color
+                priceChart.data.datasets[0].fill = true;
+                priceChart.update('none');
+                patternImageLoadedOrFailed = true; checkAllImagesProcessed();
+            };
+            patternImage.src = 'greg_t3_pattern.png';
+        };
+
+        function startExperience() {
+            if (!essentialResourcesLoaded) {
+                // console.warn("Play button clicked, but resources not ready yet.");
+                mainPlayButton.innerHTML = "⏳"; return;
+            }
+            playOverlay.style.display = 'none';
+            requestAnimationFrame(animateLine);
+            
+            audioElement.muted = false; audioElement.volume = 0; 
+            const playPromise = audioElement.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    startAudioFadeIn();
+                }).catch(error => {
+                    // console.error('Audio play failed on button click:', error);
+                    // Attempt to play again after user interaction if needed, though direct play is more reliable here.
+                    try { audioElement.muted = false; audioElement.volume = 0; audioElement.play(); startAudioFadeIn(); } 
+                    catch (e) { /* console.error('Second audio play attempt failed:', e); */ }
+                });
+            } else { // Fallback for browsers not returning a promise
+                 audioElement.muted = false; audioElement.volume = 0; audioElement.play(); startAudioFadeIn(); 
+            }
+        }
+
+        mainPlayButton.addEventListener('click', startExperience);
+    </script>
+</body>
+</html>
