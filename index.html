@@ -359,21 +359,8 @@
             mainPlayButton.disabled = false;
         }
 
-        const FADE_DURATION = 1500;
-        const FADE_INTERVAL = 50;
-        let fadeIntervalId = null;
         function startAudioFadeIn() {
-            if (fadeIntervalId) clearInterval(fadeIntervalId); 
-            let currentVolume = audioElement.muted ? 0 : audioElement.volume; 
-            if (audioElement.muted) audioElement.volume = 0; 
-            const targetVolume = 1.0; 
-            const volumeStep = targetVolume / (FADE_DURATION / FADE_INTERVAL);
-            fadeIntervalId = setInterval(() => {
-                currentVolume += volumeStep;
-                if (currentVolume >= targetVolume) {
-                    audioElement.volume = targetVolume; clearInterval(fadeIntervalId);
-                } else { audioElement.volume = currentVolume; }
-            }, FADE_INTERVAL);
+            audioElement.volume = 1.0;
         }
 
         window.onload = () => {
