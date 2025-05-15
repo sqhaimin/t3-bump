@@ -359,8 +359,27 @@
             mainPlayButton.disabled = false;
         }
 
+        const FADE_DURATION = 1000; // 1 second fade-in
+        const FADE_INTERVAL = 50;
+        let fadeIntervalId = null;
+
         function startAudioFadeIn() {
-            audioElement.volume = 1.0;
+            if (fadeIntervalId) clearInterval(fadeIntervalId);
+            // audioElement.volume is already set to 0 before play is called
+            
+            const targetVolume = 1.0;
+            const volumeStep = targetVolume / (FADE_DURATION / FADE_INTERVAL);
+
+            fadeIntervalId = setInterval(() => {
+                let currentVolume = audioElement.volume;
+                currentVolume += volumeStep;
+                if (currentVolume >= targetVolume) {
+                    audioElement.volume = targetVolume;
+                    clearInterval(fadeIntervalId);
+                } else {
+                    audioElement.volume = currentVolume;
+                }
+            }, FADE_INTERVAL);
         }
 
         window.onload = () => {
@@ -413,21 +432,32 @@
                 mainPlayButton.innerHTML = "⏳"; return;
             }
             playOverlay.style.display = 'none';
+            requestAnimationFrame(animateLine); // Start animation immediately
             
-            // Add 0.5s pause before starting
-            setTimeout(() => {
-                requestAnimationFrame(animateLine);
-                
-                audioElement.muted = false;
-                audioElement.volume = 1.0;
-                const playPromise = audioElement.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        try { audioElement.muted = false; audioElement.volume = 1.0; audioElement.play(); } 
-                        catch (e) { /* console.error('Second audio play attempt failed:', e); */ }
-                    });
-                }
-            }, 500);
+            audioElement.muted = false; 
+            audioElement.volume = 0;    // Start at 0 volume for fade-in
+
+            const playPromise = audioElement.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    startAudioFadeIn(); // Start fade-in once audio begins playing
+                }).catch(error => {
+                    // console.error('Audio play failed on button click:', error);
+                    // Fallback attempt to play and fade in if initial promise fails
+                    try { 
+                        audioElement.muted = false; 
+                        audioElement.volume = 0; 
+                        audioElement.play(); 
+                        startAudioFadeIn(); 
+                    } catch (e) { /* console.error(\'Second audio play attempt failed:\', e); */ }
+                });
+            } else { 
+                // Fallback for browsers not returning a promise from play()
+                 audioElement.muted = false; 
+                 audioElement.volume = 0; 
+                 audioElement.play(); 
+                 startAudioFadeIn(); 
+            }
         }
 
         mainPlayButton.addEventListener('click', startExperience);
