@@ -286,7 +286,10 @@
                             );
                         }
                     }
-                    resetAndLoopAnimation(); // Call the new loop function
+                    // Now, pause for 0.5s before resetting and looping.
+                    setTimeout(() => {
+                        resetAndLoopAnimation();
+                    }, 500); // 500ms pause
                 }
             }
             requestAnimationFrame(celebrationLoop);
