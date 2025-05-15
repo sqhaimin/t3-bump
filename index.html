@@ -413,22 +413,21 @@
                 mainPlayButton.innerHTML = "⏳"; return;
             }
             playOverlay.style.display = 'none';
-            requestAnimationFrame(animateLine);
             
-            audioElement.muted = false; audioElement.volume = 0; 
-            const playPromise = audioElement.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    startAudioFadeIn();
-                }).catch(error => {
-                    // console.error('Audio play failed on button click:', error);
-                    // Attempt to play again after user interaction if needed, though direct play is more reliable here.
-                    try { audioElement.muted = false; audioElement.volume = 0; audioElement.play(); startAudioFadeIn(); } 
-                    catch (e) { /* console.error('Second audio play attempt failed:', e); */ }
-                });
-            } else { // Fallback for browsers not returning a promise
-                 audioElement.muted = false; audioElement.volume = 0; audioElement.play(); startAudioFadeIn(); 
-            }
+            // Add 0.5s pause before starting
+            setTimeout(() => {
+                requestAnimationFrame(animateLine);
+                
+                audioElement.muted = false;
+                audioElement.volume = 1.0;
+                const playPromise = audioElement.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        try { audioElement.muted = false; audioElement.volume = 1.0; audioElement.play(); } 
+                        catch (e) { /* console.error('Second audio play attempt failed:', e); */ }
+                    });
+                }
+            }, 500);
         }
 
         mainPlayButton.addEventListener('click', startExperience);
